@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#07071b" />
+  <meta name="description" content="RoBlast is an independent Roblox game studio creating games people can't put down." />
+  <title>RoBlast — Roblox Game Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" href="roblast-favicon.png" type="image/png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="site-header" id="top">
+    <div class="container nav-wrap">
+      <a class="brand" href="#top" aria-label="RoBlast home">
+        <img class="brand-logo" src="roblast-logo.png" alt="RoBlast" />
+      </a>
+
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="nav-link active" href="#top">Home</a>
+        <a class="nav-link" href="#games">Games</a>
+        <a class="nav-link" href="#about">About</a>
+        <a class="nav-link" href="#contact">Contact</a>
+      </nav>
+
+      <a class="nav-roblox" href="https://www.roblox.com/communities/148897272/Boxed-Up-Games/" target="_blank" rel="noreferrer">
+        <img class="roblox-mark" src="roblox-logo.png" alt="" />
+        <span>Join on Roblox</span>
+        <span class="arrow">→</span>
+      </a>
+
+      <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-background" aria-hidden="true"></div>
+      <div class="hero-vignette" aria-hidden="true"></div>
+
+      <div class="hero-icon-wrap" aria-hidden="true">
+        <div class="hero-icon-glow"></div>
+        <img src="hero-logo-3d.svg" alt="" class="hero-icon" />
+      </div>
+
+      <div class="floating-shape shape-ring ring-a" aria-hidden="true"></div>
+      <div class="floating-shape shape-ring ring-b" aria-hidden="true"></div>
+      <div class="floating-shape shape-cross cross-a" aria-hidden="true">×</div>
+      <div class="floating-shape shape-cross cross-b" aria-hidden="true">×</div>
+      <div class="floating-shape shape-triangle triangle-a" aria-hidden="true"></div>
+      <div class="floating-shape shape-zigzag zigzag-a" aria-hidden="true"></div>
+
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <div class="welcome">WELCOME TO</div>
+          <h1 id="hero-title">RoBlast</h1>
+          <h2>Building games people<br class="desktop-only" /> can't put down.</h2>
+          <p>We're an independent Roblox game studio, creating fun, original and engaging experiences for players around the world.</p>
+
+          <div class="hero-actions">
+            <a class="hero-btn primary" href="#games">
+              <img class="roblox-icon" src="roblox-logo.png" alt="" />
+              <span>Our Games</span>
+              <span>→</span>
+            </a>
+            <a class="hero-btn secondary" href="#about">
+              <span class="people-icon" aria-hidden="true">
+                <i></i><i></i>
+              </span>
+              <span>Join Our Community</span>
+              <span>→</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-space" aria-hidden="true"></div>
+      </div>
+
+      <div class="container stats-shell">
+        <div class="stats-card">
+          <div class="stats-heading"><span class="stats-line"></span><span class="pulse"></span><span>Live Statistics</span><span class="stats-line"></span></div>
+          <div class="stat-grid" id="live-stats" aria-label="RoBlast live Roblox statistics">
+            <div class="stat">
+              <div class="stat-top">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 7.5h7A4.5 4.5 0 0 1 20 12v3a2.5 2.5 0 0 1-4.9.7L14.7 15H9.3l-.4.7A2.5 2.5 0 0 1 4 15v-3a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M8 11v3M6.5 12.5h3M16.5 11.5h.01M18.5 13.5h.01"/></svg>
+                <strong id="stat-games">—</strong>
+              </div>
+              <span>Total Games</span>
+            </div>
+            <div class="stat">
+              <div class="stat-top">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M14 18.5a4.5 4.5 0 0 1 6.5-.2"/></svg>
+                <strong id="stat-ccu">—</strong>
+              </div>
+              <span>Live CCU</span>
+            </div>
+            <div class="stat">
+              <div class="stat-top">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M10 19V5M16 19v-8M22 19H2"/><path d="m13 7 4-4 4 4"/></svg>
+                <strong id="stat-visits">—</strong>
+              </div>
+              <span>Total Visits</span>
+            </div>
+            <div class="stat">
+              <div class="stat-top">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>
+                <strong id="stat-favourites">—</strong>
+              </div>
+              <span>Total Favourites</span>
+            </div>
+          </div>
+          <div class="stats-status" id="stats-status" aria-live="polite">Updating live Roblox stats…</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="games-section" id="games">
+      <div class="container">
+        <div class="section-top">
+          <div>
+            <div class="section-label">OUR GAMES</div>
+            <h2>Check out our latest games</h2>
+          </div>
+          <a class="view-all" href="games.html">View all games <span>→</span></a>
+        </div>
+        <p class="section-subtitle">Two games. One studio. A lot of fun.</p>
+        <div class="games-grid" id="games-grid"></div>
+      </div>
+    </section>
+
+    <section class="about-section" id="about">
+      <div class="container about-grid">
+        <div>
+          <div class="section-label">ABOUT ROBLAST</div>
+          <h2>We're building the next games you'll be talking about.</h2>
+        </div>
+        <div class="about-copy">
+          <p>RoBlast is an independent Roblox studio focused on memorable gameplay loops, polished presentation and games that are easy to understand and hard to put down.</p>
+          <p>We build quickly, learn from players and keep pushing every experience forward.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact-section" id="contact">
+      <div class="container contact-card">
+        <div>
+          <div class="section-label">CONTACT</div>
+          <h2>Want to work with RoBlast?</h2>
+          <p>Come find us on Roblox and keep up with what we're building next.</p>
+        </div>
+        <a class="hero-btn primary" href="https://www.roblox.com/communities/148897272/Boxed-Up-Games/" target="_blank" rel="noreferrer"><img class="roblox-icon" src="roblox-logo.png" alt="" /><span>Join on Roblox</span><span>→</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-row">
+      <img src="roblast-logo.png" class="footer-logo" alt="RoBlast" />
+      <div class="footer-links"><a href="#top">Home</a><a href="#games">Games</a><a href="#about">About</a><a href="#contact">Contact</a></div>
+    </div>
+    <div class="container footer-bottom"><span>© <span id="year"></span> RoBlast. All rights reserved.</span><span>Made for Roblox.</span></div>
+  </footer>
+
+  <script src="games-data.js?v=20261005-2300"></script>
+  <script src="script.js?v=20261005-2300"></script>
+</body>
+</html>
