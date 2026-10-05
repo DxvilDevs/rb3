@@ -25,6 +25,6 @@ const ROBLAST_GAMES = [
     url: 'https://www.roblox.com/games/81971618170972/Spin-a-Soccer-Player',
     thumbnail: 'https://media.discordapp.net/attachments/1175408005945241720/1556771907330908190/ChatGPT_Image_6._Aug._2026_17_42_02.png?backend=b2&ex=6ac56052&is=6ac40ed2&hm=003a6532c4761243f5ba9627d28e262ee697a8405a9c59e73b7b8f8e6057f921&=&format=webp&quality=lossless&width=1280&height=722',
     description: 'Spin for ridiculous rarities, hunt secret stars and build your collection.',
-    tags: ["Simulator"]
+    tags: ["RNG"]
   }
 ];
