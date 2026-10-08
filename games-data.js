@@ -45,4 +45,13 @@ const ROBLAST_GAMES = [
     description: 'Build a mansion, get cool gears, battle it out with your new gears, play with other players, and so much more in this epic mansion tycoon!',
     tags: ["Tycoon"]
   },
+  {
+    placeId: '135631877682418',
+    name: 'Race Car For Eggs!',
+    icon: '🚗',
+    url: 'https://www.roblox.com/games/135631877682418/Race-Car-For-Eggs',
+    thumbnail: '',
+    description: 'Race down the map in your car, collecting an INSANELY RARE car along the way. Bring this back to your base and watch it hatch into life!',
+    tags: ["Racing"]
+  },
 ];
