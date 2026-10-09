@@ -88,7 +88,7 @@ button{font:inherit}
    Add logo images to /logos and regenerate logos/manifest.json.
 ---------------------------------------------------------------- */
 .brand-marquee {
-  --logo-opacity: .42;
+  --logo-opacity: .68;
   --marquee-speed: 34s;
   position: relative;
   width: 100%;
@@ -126,11 +126,11 @@ button{font:inherit}
   height: 36px;
   max-width: 175px;
   object-fit: contain;
-  filter: grayscale(1) brightness(0) invert(1);
+  filter: none; /* Preserve each logo's original colours */
   opacity: var(--logo-opacity);
   transition: opacity .22s ease, transform .22s ease;
 }
-.brand-marquee__item:hover img { opacity: .88; transform: translateY(-2px); }
+.brand-marquee__item:hover img { opacity: 1; transform: translateY(-2px); }
 @keyframes roblast-marquee-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -142,7 +142,7 @@ button{font:inherit}
   .brand-marquee__track { animation: none; }
 }
 @media (max-width: 600px) {
-  .brand-marquee { padding: 19px 0; --marquee-speed: 27s; --logo-opacity: .48; }
+  .brand-marquee { padding: 19px 0; --marquee-speed: 27s; --logo-opacity: .74; }
   .brand-marquee__group { gap: 38px; padding-right: 38px; }
   .brand-marquee__item img { height: 27px; max-width: 125px; }
 }
