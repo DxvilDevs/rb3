@@ -122,9 +122,9 @@ button{font:inherit}
 }
 .brand-marquee__item img {
   display: block;
-  width: auto;
-  height: 36px;
-  max-width: 175px;
+  width: 150px;
+  height: 58px;
+  max-width: 150px;
   object-fit: contain;
   filter: none; /* Preserve each logo's original colours */
   opacity: var(--logo-opacity);
@@ -144,5 +144,5 @@ button{font:inherit}
 @media (max-width: 600px) {
   .brand-marquee { padding: 19px 0; --marquee-speed: 27s; --logo-opacity: .74; }
   .brand-marquee__group { gap: 38px; padding-right: 38px; }
-  .brand-marquee__item img { height: 27px; max-width: 125px; }
+  .brand-marquee__item img { width: 112px; height: 42px; max-width: 112px; }
 }
