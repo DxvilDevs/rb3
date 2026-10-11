@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#08071b" />
+  <title>RoBlast — Stats</title>
+  <meta name="description" content="Live analytics across every RoBlast game: daily players, playtime, retention and more." />
+  <link rel="canonical" href="https://roblast.world/stats.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="RoBlast" />
+  <meta property="og:url" content="https://roblast.world/stats.html" />
+  <meta property="og:title" content="RoBlast — Stats" />
+  <meta property="og:description" content="Live analytics across every RoBlast game: daily players, playtime, retention and more." />
+  <meta property="og:image" content="https://roblast.world/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="RoBlast — Building games people can't put down." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@roblast_" />
+  <meta name="twitter:title" content="RoBlast — Stats" />
+  <meta name="twitter:description" content="Live analytics across every RoBlast game: daily players, playtime, retention and more." />
+  <meta name="twitter:image" content="https://roblast.world/og-image.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" href="roblast-favicon.png" type="image/png" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="stats.css?v=20261011-0500" />
+</head>
+<body>
+  <canvas id="fx-canvas" aria-hidden="true"></canvas>
+  <div class="scroll-progress" aria-hidden="true"><span></span></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <header class="site-header is-static">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="RoBlast home"><img class="brand-logo" src="roblast-logo.png" alt="RoBlast" /></a>
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="nav-link" href="index.html">Home</a><a class="nav-link" href="games.html">Games</a><a class="nav-link active" href="stats.html">Stats</a><a class="nav-link" href="index.html#about">About</a><a class="nav-link" href="index.html#contact">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="social-icon discord" href="https://discord.gg/dguMDHNxG8" target="_blank" rel="noreferrer" aria-label="Join the RoBlast Discord"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03ZM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z"/></svg></a><a class="social-icon x" href="https://x.com/roblast_" target="_blank" rel="noreferrer" aria-label="Follow RoBlast on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
+        <a class="nav-roblox" aria-label="Join on Roblox" href="https://www.roblox.com/communities/148897272/Boxed-Up-Games/" target="_blank" rel="noreferrer"><img class="roblox-mark" src="roblox-logo.png" alt="" /><span>Join on Roblox</span><span class="arrow">→</span></a>
+      </div>
+      <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="stats-page">
+    <div class="container">
+      <div class="stats-head">
+        <div>
+          <div class="section-label" data-scramble>STUDIO TELEMETRY</div>
+          <h1 class="glitch" data-text="RoBlast stats">RoBlast stats</h1>
+          <p>Analytics across every RoBlast game, synced from Roblox every 6 hours.</p>
+        </div>
+        <div class="sync-chip" id="sync-chip"><span class="hud-dot"></span><span id="sync-text">Connecting…</span></div>
+      </div>
+
+      <div class="stats-controls" id="stats-controls" hidden>
+        <div class="pill-row" id="game-pills" role="tablist" aria-label="Choose a game"></div>
+        <div class="pill-row range-pills" id="range-pills" role="tablist" aria-label="Date range">
+          <button class="pill" data-range="7">7D</button>
+          <button class="pill active" data-range="30">30D</button>
+          <button class="pill" data-range="90">90D</button>
+        </div>
+      </div>
+
+      <div class="stats-empty hud-frame" id="stats-empty" hidden>
+        <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
+        <strong>Telemetry sync pending</strong>
+        <p>The first stats sync hasn't landed yet. Check back soon.</p>
+      </div>
+
+      <div id="stats-content" hidden>
+        <div class="kpi-grid" id="kpi-grid"></div>
+
+        <div class="chart-grid">
+          <section class="chart-panel wide hud-frame">
+            <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
+            <header><h2>Daily active users</h2><span class="panel-note" id="dau-note"></span></header>
+            <div class="chart-box tall"><canvas id="chart-dau"></canvas></div>
+          </section>
+          <section class="chart-panel hud-frame">
+            <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
+            <header><h2>Sessions &amp; playtime</h2></header>
+            <div class="chart-box"><canvas id="chart-engagement"></canvas></div>
+          </section>
+          <section class="chart-panel hud-frame">
+            <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
+            <header><h2>Retention</h2><span class="panel-note">Day 1 &amp; day 7</span></header>
+            <div class="chart-box"><canvas id="chart-retention"></canvas></div>
+          </section>
+          <section class="chart-panel hud-frame">
+            <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
+            <header><h2>New vs returning</h2><span class="panel-note">Last 30 days</span></header>
+            <div class="chart-box"><canvas id="chart-newret"></canvas></div>
+          </section>
+          <section class="chart-panel hud-frame">
+            <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
+            <header><h2>Platforms</h2><span class="panel-note">Last 30 days</span></header>
+            <div class="chart-box"><canvas id="chart-platforms"></canvas></div>
+          </section>
+          <section class="chart-panel hud-frame">
+            <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
+            <header><h2>Top countries</h2><span class="panel-note">Last 30 days</span></header>
+            <div class="chart-box"><canvas id="chart-countries"></canvas></div>
+          </section>
+          <section class="chart-panel hud-frame">
+            <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
+            <header><h2>Game leaderboard</h2><span class="panel-note" id="board-note"></span></header>
+            <div class="leaderboard" id="leaderboard"></div>
+          </section>
+        </div>
+
+        <p class="stats-footnote">Data comes from Roblox Creator Analytics via Open Cloud. Combined figures add each game together, so a player active in two games counts twice. Peak concurrent players covers the last 28 days.</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+  <script src="games-data.js?v=20261011-0500"></script>
+  <script src="script.js?v=20261011-0500"></script>
+  <script src="fx.js?v=20261011-0500"></script>
+  <script src="stats.js?v=20261011-0500"></script>
+</body>
+</html>

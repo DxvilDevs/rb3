@@ -1,0 +1,44 @@
+name: Sync Roblox stats
+
+# Pulls analytics for every game in games-data.js with the ROBLOX_API_KEY
+# secret and commits data/stats.json, which stats.html charts.
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stats-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch analytics
+        env:
+          ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
+        run: node scripts/fetch-stats.mjs
+
+      - name: Commit updated stats
+        run: |
+          if git diff --quiet -- data/stats.json && git ls-files --error-unmatch data/stats.json >/dev/null 2>&1; then
+            echo "No new data."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/stats.json
+          git commit -m "Update Roblox stats"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

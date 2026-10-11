@@ -1,0 +1,57 @@
+/* RoBlast stats page. Builds on styles.css tokens. */
+.stats-page{position:relative;z-index:2;min-height:100vh;padding:140px 0 90px;background:radial-gradient(circle at 85% 0%,rgba(154,80,244,.16),transparent 35%)}
+.stats-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:26px}
+.stats-head h1{margin:0;font-size:56px;letter-spacing:-.055em;line-height:1.05}
+.stats-head p{margin:8px 0 0;color:#aaa5b6;max-width:520px}
+.sync-chip{display:inline-flex;align-items:center;gap:9px;flex:0 0 auto;padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--neon);border:1px solid rgba(62,243,255,.35);background:rgba(62,243,255,.06);clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+.sync-chip.offline{color:#ffc857;border-color:rgba(255,200,87,.4);background:rgba(255,200,87,.06)}
+.sync-chip.offline .hud-dot{background:#ffc857;box-shadow:0 0 8px #ffc857}
+
+.stats-controls{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.stats-controls[hidden],#stats-content[hidden],.stats-empty[hidden]{display:none}
+.pill-row{display:flex;gap:8px;flex-wrap:wrap}
+.pill{font:inherit;font-size:13px;font-weight:700;color:#cfd8f0;padding:9px 14px;border:1px solid rgba(62,243,255,.2);background:rgba(62,243,255,.04);cursor:pointer;clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);transition:color .2s,border-color .2s,background .2s,box-shadow .2s}
+.pill:hover:not(:disabled){border-color:var(--neon);color:#fff}
+.pill.active{color:#05040f;background:var(--neon);border-color:var(--neon);box-shadow:0 0 18px rgba(62,243,255,.45)}
+.pill:disabled{opacity:.4;cursor:not-allowed}
+.range-pills .pill{min-width:54px;letter-spacing:.08em}
+
+.stats-empty{display:grid;gap:6px;padding:40px;text-align:center;border:1px solid rgba(255,200,87,.3);background:rgba(10,9,28,.8)}
+.stats-empty strong{font-size:22px}
+.stats-empty p{margin:0;color:#aaa5b6}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.kpi{position:relative;display:grid;gap:4px;padding:16px 18px 44px;overflow:hidden;border:1px solid rgba(62,243,255,.18);background:linear-gradient(180deg,rgba(18,16,46,.86),rgba(10,9,28,.92))}
+.kpi-label{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#a9b6d6}
+.kpi-value{font-size:32px;font-weight:800;letter-spacing:-.04em;line-height:1.1;color:#fff;text-shadow:0 0 18px rgba(62,243,255,.45)}
+.kpi-foot{min-height:18px}
+.delta{font-size:12px;font-weight:700;letter-spacing:.04em}
+.delta.up{color:var(--live)}
+.delta.down{color:#ff6b8b}
+.delta.flat{color:rgba(62,243,255,.6);letter-spacing:.14em}
+.spark{position:absolute;left:0;right:0;bottom:0;width:100%;height:38px;opacity:.85;filter:drop-shadow(0 0 4px currentColor)}
+
+.chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.chart-panel{position:relative;padding:18px 20px 16px;border:1px solid rgba(62,243,255,.18);background:linear-gradient(180deg,rgba(14,12,38,.88),rgba(9,8,26,.94));min-width:0}
+.chart-panel.wide{grid-column:1/-1}
+.chart-panel header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.chart-panel h2{margin:0;font-size:18px;letter-spacing:-.02em}
+.panel-note{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(62,243,255,.7)}
+.chart-box{position:relative;height:260px}
+.chart-box.tall{height:320px}
+
+.leaderboard{display:grid;gap:6px}
+.lb-row{display:grid;grid-template-columns:34px minmax(0,1fr) 92px 74px 60px;align-items:center;gap:10px;width:100%;padding:10px 12px;font:inherit;font-size:13px;color:#e8e6f5;text-align:left;border:1px solid transparent;background:rgba(62,243,255,.03);cursor:pointer;transition:border-color .2s,background .2s}
+.lb-row:hover,.lb-row.active{border-color:rgba(62,243,255,.45);background:rgba(62,243,255,.08)}
+.lb-row span:nth-child(n+3){text-align:right;font-variant-numeric:tabular-nums}
+.lb-head{cursor:default;background:none;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8f9ab8;padding-block:4px}
+.lb-head:hover{border-color:transparent;background:none}
+.lb-rank{font-weight:800;color:var(--neon)}
+.lb-name{position:relative;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-bottom:6px}
+.lb-name i{position:absolute;left:0;bottom:0;height:2px;border-radius:2px;box-shadow:0 0 8px currentColor}
+
+.stats-footnote{margin:22px 0 0;font-size:12px;line-height:1.6;color:#7d7892;max-width:760px}
+
+@media (max-width:1050px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:820px){.chart-grid{grid-template-columns:1fr}.stats-head{flex-direction:column;align-items:flex-start}.stats-head h1{font-size:40px}}
+@media (max-width:600px){.stats-page{padding-top:120px}.kpi-value{font-size:24px}.kpi{padding:14px 14px 40px}.chart-box{height:230px}.chart-box.tall{height:260px}.chart-panel{padding:14px 12px}.lb-row{grid-template-columns:26px minmax(0,1fr) 70px 54px;font-size:12px}.lb-row span:nth-child(4){display:none}.stats-controls{align-items:flex-start}}
