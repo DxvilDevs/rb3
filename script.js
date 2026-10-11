@@ -161,25 +161,122 @@ function renderTeam() {
 
   grid.innerHTML = ROBLAST_TEAM.map((member, index) => {
     const userId = /^\d+$/.test(String(member.robloxUserId || '')) ? String(member.robloxUserId) : '';
-    const tag = userId ? 'a' : 'div';
-    const link = userId
-      ? ` href="https://www.roblox.com/users/${userId}/profile" target="_blank" rel="noreferrer"`
-      : '';
+    const hasProfile = Boolean(member.bio || member.discord);
+    // Cards with a bio open a profile; otherwise they link to Roblox (if known).
+    let open = '<div';
+    let close = '</div>';
+    if (hasProfile) {
+      open = `<button type="button" data-member="${index}" aria-haspopup="dialog" aria-label="Open ${escapeHtml(member.name)}'s profile"`;
+      close = '</button>';
+    } else if (userId) {
+      open = `<a href="https://www.roblox.com/users/${userId}/profile" target="_blank" rel="noreferrer"`;
+      close = '</a>';
+    }
     const avatar = member.avatar
       ? `<img src="${escapeHtml(member.avatar)}" alt="" loading="lazy" />`
       : '';
+    const hint = hasProfile ? 'View profile →' : (userId ? 'Roblox profile ↗' : '');
     return `
-      <${tag} class="team-card hud-frame reveal"${link}${userId ? ` data-roblox-user-id="${userId}"` : ''}>
+      ${open} class="team-card hud-frame reveal"${userId ? ` data-roblox-user-id="${userId}"` : ''}>
         <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
         <span class="team-id">ID // ${String(index + 1).padStart(3, '0')}</span>
         <div class="team-avatar"><span>${escapeHtml(initials(member.name))}</span>${avatar}</div>
         <h3>${escapeHtml(member.name)}</h3>
         <p>${escapeHtml(member.role)}</p>
-        ${userId ? '<span class="team-link">Roblox profile ↗</span>' : ''}
-      </${tag}>`;
+        ${hint ? `<span class="team-link">${hint}</span>` : ''}
+      ${close}`;
   }).join('');
   section.hidden = false;
 }
+
+/* Team profile card: opens when a team card with a bio is clicked. */
+const discordIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03ZM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z"/></svg>';
+
+function getProfileDialog() {
+  let dialog = document.getElementById('profile-dialog');
+  if (dialog) return dialog;
+  dialog = document.createElement('dialog');
+  dialog.id = 'profile-dialog';
+  dialog.className = 'profile-dialog';
+  dialog.setAttribute('aria-labelledby', 'profile-name');
+  document.body.appendChild(dialog);
+
+  // Close on the X button or a click on the dimmed backdrop.
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog || event.target.closest('.profile-close')) dialog.close();
+    const copy = event.target.closest('.profile-copy');
+    if (copy) copyDiscord(copy);
+  });
+  dialog.addEventListener('close', () => document.documentElement.classList.remove('modal-open'));
+  return dialog;
+}
+
+async function copyDiscord(button) {
+  const value = button.dataset.copy || '';
+  try {
+    await navigator.clipboard.writeText(value);
+  } catch {
+    // Older browsers / blocked clipboard: fall back to a hidden textarea.
+    const area = document.createElement('textarea');
+    area.value = value;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); } catch { /* nothing else to try */ }
+    area.remove();
+  }
+  button.textContent = 'Copied!';
+  button.classList.add('copied');
+  window.setTimeout(() => {
+    button.textContent = 'Copy';
+    button.classList.remove('copied');
+  }, 1600);
+}
+
+function openProfile(index, card) {
+  const member = ROBLAST_TEAM[index];
+  if (!member) return;
+  const dialog = getProfileDialog();
+  const userId = /^\d+$/.test(String(member.robloxUserId || '')) ? String(member.robloxUserId) : '';
+  // Reuse whatever avatar the card shows (custom image or loaded Roblox headshot).
+  const cardImg = card && card.querySelector('.team-avatar img');
+  const avatarSrc = member.avatar || (cardImg ? cardImg.src : '');
+
+  dialog.innerHTML = `
+    <div class="profile-card hud-frame">
+      <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
+      <button type="button" class="profile-close" aria-label="Close profile">✕</button>
+      <span class="profile-id">ID // ${String(index + 1).padStart(3, '0')} · PROFILE</span>
+      <div class="profile-top">
+        <div class="team-avatar profile-avatar"><span>${escapeHtml(initials(member.name))}</span>${avatarSrc ? `<img src="${escapeHtml(avatarSrc)}" alt="" />` : ''}</div>
+        <div>
+          <h3 id="profile-name">${escapeHtml(member.name)}</h3>
+          <p class="profile-role">${escapeHtml(member.role)}</p>
+        </div>
+      </div>
+      ${member.bio ? `<div class="profile-label">// BIO</div><p class="profile-bio">${escapeHtml(member.bio)}</p>` : ''}
+      ${member.discord ? `
+        <div class="profile-label">// DISCORD</div>
+        <div class="profile-discord">
+          ${discordIcon}
+          <span class="profile-handle">${escapeHtml(member.discord)}</span>
+          <button type="button" class="profile-copy" data-copy="${escapeHtml(member.discord)}">Copy</button>
+        </div>` : ''}
+      ${userId ? `<a class="profile-roblox" href="https://www.roblox.com/users/${userId}/profile" target="_blank" rel="noreferrer">Roblox profile ↗</a>` : ''}
+    </div>`;
+
+  document.documentElement.classList.add('modal-open');
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+  dialog.querySelector('.profile-close').focus();
+}
+
+document.addEventListener('click', (event) => {
+  const card = event.target.closest('.team-card[data-member]');
+  if (card) openProfile(Number(card.dataset.member), card);
+});
 
 renderTimeline();
 renderTeam();
