@@ -106,10 +106,9 @@
     const hours = sumSeries(games, 'playtimeHours');
     const dau = sumSeries(games, 'dau');
     const peak = sumSeries(games, 'peakCcu');
-    const mau = games.reduce((total, g) => {
-      const latest = (g.daily.mau || []).slice(-1)[0];
-      return total + (latest ? latest.v : 0);
-    }, 0);
+    // Only show monthly players when every listed game reported it (no partial totals).
+    const mauLatest = games.map((g) => (g.daily.mau || []).slice(-1)[0]);
+    const mau = mauLatest.every(Boolean) ? mauLatest.reduce((total, p) => total + p.v, 0) : NaN;
     const countries = new Set();
     games.forEach((g) => (g.countries || []).filter((c) => !isPlaceholder(c.label)).forEach((c) => countries.add(c.label)));
     // All-time public totals count every game (even ones without analytics access).

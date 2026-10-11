@@ -173,7 +173,29 @@ function breakdownSeries(response) {
   return out;
 }
 
-async function collectGame(game, universeId, publicInfo) {
+// Where each job's result lives on the game record, for carrying values forward.
+const FIELD_PATHS = {
+  DailyActiveUsers: ['daily', 'dau'],
+  Visits: ['daily', 'sessions'],
+  TotalPlayTimeHours: ['daily', 'playtimeHours'],
+  MonthlyActiveUsers: ['daily', 'mau'],
+  PeakConcurrentPlayers: ['daily', 'peakCcu'],
+  'DailyActiveUsers by IsNewUser': ['newVsReturning'],
+  'DailyActiveUsers by Platform': ['platforms'],
+  'DailyActiveUsers by Country': ['countries']
+};
+
+function getPath(object, path) {
+  return path.reduce((value, key) => (value == null ? undefined : value[key]), object);
+}
+
+function setPath(object, path, value) {
+  const last = path[path.length - 1];
+  const parent = path.slice(0, -1).reduce((node, key) => (node[key] ??= {}), object);
+  parent[last] = value;
+}
+
+async function collectGame(game, universeId, publicInfo, previous) {
   const end = iso(dayStart(0));
   const daily = (metric, days = DAYS) => ({
     metric, granularity: 'OneDay', startTime: iso(dayStart(-days)), endTime: end
@@ -221,6 +243,13 @@ async function collectGame(game, universeId, publicInfo) {
     } catch (error) {
       result.errors.push({ metric: label, status: error.status || null, message: error.message });
       console.warn(`  ! ${game.name}: ${error.message}`);
+      // Transient Roblox errors (5xx / 429): keep the last good value instead of dropping it.
+      const transient = !error.status || error.status >= 500 || error.status === 429;
+      const kept = transient && previous ? getPath(previous, FIELD_PATHS[label]) : undefined;
+      if (kept !== undefined) {
+        setPath(result, FIELD_PATHS[label], kept);
+        console.warn(`    kept previous ${label} data for ${game.name}`);
+      }
       // No access to this experience: don't burn the rate limit on the rest.
       if (error.status === 401 || error.status === 403) {
         result.noAccess = true;
@@ -252,6 +281,14 @@ async function main() {
   }
 
   const publicDetails = await fetchPublicDetails(resolved.map((entry) => entry.universeId));
+  const outPath = join(root, 'data', 'stats.json');
+  let previousFile = null;
+  try {
+    previousFile = JSON.parse(await readFile(outPath, 'utf8'));
+  } catch {
+    // First run: nothing to carry forward.
+  }
+  const previousByUniverse = new Map((previousFile?.games || []).map((g) => [String(g.universeId), g]));
   const output = {
     generatedAt: new Date().toISOString(),
     rangeDays: DAYS,
@@ -261,7 +298,7 @@ async function main() {
 
   for (const { game, universeId } of resolved) {
     console.log(`Querying ${game.name} (universe ${universeId})…`);
-    output.games.push(await collectGame(game, universeId, publicDetails.get(universeId)));
+    output.games.push(await collectGame(game, universeId, publicDetails.get(universeId), previousByUniverse.get(universeId)));
   }
 
   // Every analytics call failing with 401/403 means the key or its permissions
@@ -283,13 +320,9 @@ async function main() {
 
   // Keep the previous timestamp when nothing else changed, so scheduled runs
   // only produce a commit when there's genuinely new data.
-  const outPath = join(root, 'data', 'stats.json');
-  try {
-    const previous = JSON.parse(await readFile(outPath, 'utf8'));
+  if (previousFile) {
     const strip = ({ generatedAt, ...rest }) => JSON.stringify(rest);
-    if (strip(previous) === strip(output)) output.generatedAt = previous.generatedAt;
-  } catch {
-    // No previous file yet.
+    if (strip(previousFile) === strip(output)) output.generatedAt = previousFile.generatedAt;
   }
 
   await mkdir(join(root, 'data'), { recursive: true });
