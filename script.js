@@ -111,6 +111,69 @@ async function renderBrandMarquee() {
 }
 renderBrandMarquee();
 
+/* ---------------------------------------------------------------
+   Journey timeline + team cards (data in studio-data.js)
+   Each section stays hidden until its list has entries.
+---------------------------------------------------------------- */
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[ch]);
+}
+
+function renderTimeline() {
+  const section = document.getElementById('journey');
+  const list = document.getElementById('timeline');
+  if (!section || !list || typeof ROBLAST_MILESTONES === 'undefined') return;
+  if (!Array.isArray(ROBLAST_MILESTONES) || !ROBLAST_MILESTONES.length) return;
+
+  list.innerHTML = ROBLAST_MILESTONES.map((item) => `
+    <li class="timeline-item reveal">
+      <span class="timeline-node" aria-hidden="true"></span>
+      <div class="timeline-card">
+        <time>${escapeHtml(item.date)}</time>
+        <h3>${escapeHtml(item.title)}</h3>
+        ${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}
+      </div>
+    </li>`).join('');
+  section.hidden = false;
+}
+
+function initials(name) {
+  return String(name || '?').trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+}
+
+function renderTeam() {
+  const section = document.getElementById('team');
+  const grid = document.getElementById('team-grid');
+  if (!section || !grid || typeof ROBLAST_TEAM === 'undefined') return;
+  if (!Array.isArray(ROBLAST_TEAM) || !ROBLAST_TEAM.length) return;
+
+  grid.innerHTML = ROBLAST_TEAM.map((member, index) => {
+    const userId = /^\d+$/.test(String(member.robloxUserId || '')) ? String(member.robloxUserId) : '';
+    const tag = userId ? 'a' : 'div';
+    const link = userId
+      ? ` href="https://www.roblox.com/users/${userId}/profile" target="_blank" rel="noreferrer"`
+      : '';
+    const avatar = member.avatar
+      ? `<img src="${escapeHtml(member.avatar)}" alt="" loading="lazy" />`
+      : '';
+    return `
+      <${tag} class="team-card hud-frame reveal"${link}${userId ? ` data-roblox-user-id="${userId}"` : ''}>
+        <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
+        <span class="team-id">ID // ${String(index + 1).padStart(3, '0')}</span>
+        <div class="team-avatar"><span>${escapeHtml(initials(member.name))}</span>${avatar}</div>
+        <h3>${escapeHtml(member.name)}</h3>
+        <p>${escapeHtml(member.role)}</p>
+        ${userId ? '<span class="team-link">Roblox profile ↗</span>' : ''}
+      </${tag}>`;
+  }).join('');
+  section.hidden = false;
+}
+
+renderTimeline();
+renderTeam();
+
 const reveals = document.querySelectorAll('.reveal');
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
@@ -178,7 +241,8 @@ function robloxProxyUrl(targetUrl) {
   return targetUrl
     .replace('https://apis.roblox.com', 'https://apis.rotunnel.com')
     .replace('https://games.roblox.com', 'https://games.rotunnel.com')
-    .replace('https://groups.roblox.com', 'https://groups.rotunnel.com');
+    .replace('https://groups.roblox.com', 'https://groups.rotunnel.com')
+    .replace('https://thumbnails.roblox.com', 'https://thumbnails.rotunnel.com');
 }
 
 async function fetchJson(targetUrl) {
@@ -398,3 +462,30 @@ if (statsElements.games || hasGameCards) {
   window.setInterval(updateLiveStats, statsRefreshMs);
 }
 
+// Team avatars: Roblox headshots for cards that have a robloxUserId and no
+// custom avatar. Runs last because it relies on fetchJson above.
+async function loadTeamAvatars() {
+  const cards = [...document.querySelectorAll('.team-card[data-roblox-user-id]')]
+    .filter((card) => !card.querySelector('.team-avatar img'));
+  if (!cards.length) return;
+
+  const ids = [...new Set(cards.map((card) => card.dataset.robloxUserId))];
+  const data = await fetchJson(
+    `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${ids.join(',')}&size=150x150&format=Png&isCircular=false`
+  );
+  if (!data || !Array.isArray(data.data)) return;
+
+  for (const entry of data.data) {
+    if (entry.state !== 'Completed' || typeof entry.imageUrl !== 'string') continue;
+    cards
+      .filter((card) => card.dataset.robloxUserId === String(entry.targetId))
+      .forEach((card) => {
+        const img = document.createElement('img');
+        img.src = entry.imageUrl;
+        img.alt = '';
+        img.loading = 'lazy';
+        card.querySelector('.team-avatar').appendChild(img);
+      });
+  }
+}
+loadTeamAvatars();
