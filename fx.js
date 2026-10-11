@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------
    RoBlast FX layer
-   Purely visual: particle network, cursor glow, scroll progress,
+   Purely visual: particle network, hero parallax, scroll progress,
    holo card tilt, text decrypt, HUD clock and stat flashes.
    Everything degrades gracefully and respects reduced motion.
 ---------------------------------------------------------------- */
@@ -128,16 +128,12 @@
     }
   }
 
-  /* Cursor ring + hero parallax -------------------------------- */
-  const ring = document.querySelector('.cursor-ring');
+  /* Hero parallax ---------------------------------------------- */
   const iconWrap = document.querySelector('.hero-icon-wrap');
-  let ringX = -100;
-  let ringY = -100;
 
   window.addEventListener('pointermove', (event) => {
     pointer.x = event.clientX;
     pointer.y = event.clientY;
-    if (ring && finePointer) ring.classList.add('on');
 
     if (iconWrap && !reduceMotion) {
       const px = (event.clientX / window.innerWidth - 0.5) * -24;
@@ -150,22 +146,7 @@
   document.addEventListener('pointerleave', () => {
     pointer.x = -9999;
     pointer.y = -9999;
-    if (ring) ring.classList.remove('on');
   });
-
-  if (ring && finePointer && !reduceMotion) {
-    const follow = () => {
-      ringX += (pointer.x - ringX) * 0.2;
-      ringY += (pointer.y - ringY) * 0.2;
-      ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
-      requestAnimationFrame(follow);
-    };
-    follow();
-
-    document.addEventListener('pointerover', (event) => {
-      ring.classList.toggle('hover', Boolean(event.target.closest('a, button, .game-card')));
-    });
-  }
 
   /* Scroll progress -------------------------------------------- */
   const progress = document.querySelector('.scroll-progress');
