@@ -133,8 +133,9 @@
 
     // Pick a column count that fills rows evenly on desktop (e.g. 6 tiles -> 3 x 2).
     $('kpi-grid').style.setProperty('--cols', { 1: 1, 2: 2, 3: 3, 5: 3, 6: 3, 9: 3 }[tiles.length] || 4);
+    // With 7 tiles the headline tile goes double-width so both rows fill.
     $('kpi-grid').innerHTML = tiles.map((t, i) => `
-      <div class="kpi hud-frame">
+      <div class="kpi hud-frame${tiles.length === 7 && i === 0 ? ' kpi-wide' : ''}">
         <span class="kpi-label">${t.label}</span>
         <strong class="kpi-value">${fmt(t.value)}${t.suffix || ''}</strong>
         <div class="kpi-foot">${t.d || `<span class="delta flat">${t.note}</span>`}</div>
