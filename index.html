@@ -8,12 +8,24 @@
   <title>RoBlast — Roblox Game Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="icon" href="roblast-favicon.png" type="image/png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="boot" aria-hidden="true">
+    <div class="boot-inner">
+      <img src="roblast-favicon.png" alt="" class="boot-logo" />
+      <div class="boot-text">INITIALIZING ROBLAST.SYS</div>
+      <div class="boot-bar"><span></span></div>
+      <div class="boot-log">&gt; loading worlds… &gt; syncing players… &gt; ready</div>
+    </div>
+  </div>
+  <canvas id="fx-canvas" aria-hidden="true"></canvas>
+  <div class="scroll-progress" aria-hidden="true"><span></span></div>
+  <div class="cursor-ring" aria-hidden="true"></div>
   <div class="noise" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
 
   <header class="site-header" id="top">
     <div class="container nav-wrap">
@@ -44,9 +56,20 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero-background" aria-hidden="true"></div>
       <div class="hero-vignette" aria-hidden="true"></div>
+      <div class="hero-grid" aria-hidden="true"><div class="hero-grid-plane"></div></div>
+      <div class="hero-sweep" aria-hidden="true"></div>
+      <div class="hero-hud" aria-hidden="true">
+        <span class="hud-tl">SECTOR_07 // RBX-NET</span>
+        <span class="hud-tr">UTC <b id="hud-clock">--:--:--</b></span>
+      </div>
 
       <div class="hero-icon-wrap" aria-hidden="true">
         <div class="hero-icon-glow"></div>
+        <div class="holo-rings">
+          <span class="holo-ring ring-1"><i></i></span>
+          <span class="holo-ring ring-2"><i></i></span>
+          <span class="holo-ring ring-3"><i></i></span>
+        </div>
         <div class="hero-logo-3d">
           <img src="roblast-favicon.png" alt="" class="hero-logo-depth depth-1" />
           <img src="roblast-favicon.png" alt="" class="hero-logo-depth depth-2" />
@@ -61,8 +84,9 @@
 
       <div class="container hero-inner">
         <div class="hero-copy">
-          <div class="welcome">WELCOME TO</div>
-          <h1 id="hero-title">RoBlast</h1>
+          <div class="hud-chip"><span class="hud-dot"></span>STUDIO LINK ESTABLISHED</div>
+          <div class="welcome" data-scramble>WELCOME TO</div>
+          <h1 id="hero-title" class="glitch" data-text="RoBlast">RoBlast</h1>
           <h2>Building games people<br class="desktop-only" /> can't put down.</h2>
           <p>We're an independent Roblox game studio, creating fun, original and engaging experiences for players around the world.</p>
 
@@ -86,7 +110,8 @@
       </div>
 
       <div class="container stats-shell">
-        <div class="stats-card">
+        <div class="stats-card hud-frame">
+          <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
           <div class="stats-heading"><span class="stats-line"></span><span class="pulse"></span><span>Live Statistics</span><span class="stats-line"></span></div>
           <div class="stat-grid" id="live-stats" aria-label="RoBlast live Roblox statistics">
             <div class="stat">
@@ -128,11 +153,18 @@
       <div class="brand-marquee__track" id="brand-marquee-track"></div>
     </section>
 
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-track">
+        <span>BUILDING GAMES PEOPLE CAN'T PUT DOWN</span><span>◆</span><span>INDEPENDENT ROBLOX STUDIO</span><span>◆</span><span>NEW WORLDS LOADING</span><span>◆</span><span>PLAYERS FIRST</span><span>◆</span>
+        <span>BUILDING GAMES PEOPLE CAN'T PUT DOWN</span><span>◆</span><span>INDEPENDENT ROBLOX STUDIO</span><span>◆</span><span>NEW WORLDS LOADING</span><span>◆</span><span>PLAYERS FIRST</span><span>◆</span>
+      </div>
+    </div>
+
     <section class="games-section" id="games">
       <div class="container">
         <div class="section-top">
           <div>
-            <div class="section-label">OUR GAMES</div>
+            <div class="section-label" data-scramble>OUR GAMES</div>
             <h2>Check out our latest games</h2>
           </div>
           <a class="view-all" href="games.html">View all games <span>→</span></a>
@@ -145,20 +177,26 @@
     <section class="about-section" id="about">
       <div class="container about-grid">
         <div>
-          <div class="section-label">ABOUT ROBLAST</div>
+          <div class="section-label" data-scramble>ABOUT ROBLAST</div>
           <h2>We're building the next games you'll be talking about.</h2>
         </div>
         <div class="about-copy">
           <p>RoBlast is an independent Roblox studio focused on memorable gameplay loops, polished presentation and games that are easy to understand and hard to put down.</p>
           <p>We build quickly, learn from players and keep pushing every experience forward.</p>
+          <div class="modules">
+            <div class="module reveal"><span class="module-id">MOD_01</span><strong>Rapid iteration</strong><span>Ship, measure, improve.</span></div>
+            <div class="module reveal"><span class="module-id">MOD_02</span><strong>Player-first loops</strong><span>Easy to learn, hard to put down.</span></div>
+            <div class="module reveal"><span class="module-id">MOD_03</span><strong>Polished presentation</strong><span>Every pixel earns its place.</span></div>
+          </div>
         </div>
       </div>
     </section>
 
     <section class="contact-section" id="contact">
-      <div class="container contact-card">
+      <div class="container contact-card hud-frame">
+        <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
         <div>
-          <div class="section-label">CONTACT</div>
+          <div class="section-label" data-scramble>CONTACT</div>
           <h2>Want to work with RoBlast?</h2>
           <p>Come find us on Roblox and keep up with what we're building next.</p>
         </div>
@@ -175,7 +213,8 @@
     <div class="container footer-bottom"><span>© <span id="year"></span> RoBlast. All rights reserved.</span><span>Made for Roblox.</span></div>
   </footer>
 
-  <script src="games-data.js?v=20261005-2300"></script>
-  <script src="script.js?v=20261005-2300"></script>
+  <script src="games-data.js?v=20261011-0100"></script>
+  <script src="script.js?v=20261011-0100"></script>
+  <script src="fx.js?v=20261011-0100"></script>
 </body>
 </html>
