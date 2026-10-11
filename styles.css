@@ -244,36 +244,6 @@ main>section>.container{position:relative;z-index:2}
 .hero-logo-3d{transition:transform .2s ease-out}
 .hero-icon-wrap{transform:translate3d(var(--px,0),var(--py,0),0);transition:transform .25s ease-out}
 
-/* --- 3D hero (hero3d.js) ---------------------------------------- */
-.hero-3d{position:absolute;inset:0;z-index:3}
-.hero-3d-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:2;cursor:grab;touch-action:pan-y}
-.hero-3d.dragging .hero-3d-canvas{cursor:grabbing}
-.planet-layer{position:absolute;inset:0;pointer-events:none}
-.planet-layer.back{z-index:1}
-.planet-layer.front{z-index:3}
-.hero.has-3d .hero-icon-wrap{display:none}
-/* Keep the copy and stats above the 3D layer (beats main>section>.container). */
-.hero.has-3d>.hero-inner{z-index:4}
-.hero.has-3d>.stats-shell{z-index:5}
-/* Let drags reach the 3D canvas; the copy and buttons stay clickable. */
-.hero.has-3d .hero-inner{pointer-events:none}
-.hero.has-3d .hero-copy{pointer-events:auto}
-.planet{position:absolute;left:0;top:0;display:flex;align-items:center;gap:10px;pointer-events:auto;will-change:transform;transition:opacity .4s}
-.planet-body{position:relative;flex:0 0 auto;width:62px;height:62px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#3a2a8a,#0d0a26);box-shadow:0 0 0 2px var(--planet),0 0 22px var(--planet),inset -10px -12px 22px rgba(0,0,0,.65);transition:box-shadow .25s,transform .25s}
-.planet-body img{width:100%;height:100%;object-fit:cover;transform:scale(1.35)}
-.planet-body::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.45),transparent 42%),radial-gradient(circle at 75% 80%,rgba(0,0,0,.55),transparent 60%);pointer-events:none}
-.planet-body b{font-size:28px}
-.planet-label{display:grid;gap:1px;padding:5px 9px;white-space:nowrap;background:rgba(6,5,20,.72);border:1px solid color-mix(in srgb,var(--planet) 55%,transparent);backdrop-filter:blur(6px);clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
-.planet-label strong{font-size:12px;font-weight:800;letter-spacing:-.01em;color:#fff}
-.planet-label em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--planet);max-height:0;overflow:hidden;transition:max-height .25s}
-.planet:hover .planet-body,.planet:focus-visible .planet-body{transform:scale(1.12);box-shadow:0 0 0 2px #fff,0 0 34px var(--planet),inset -10px -12px 22px rgba(0,0,0,.65)}
-.planet:hover .planet-label em,.planet:focus-visible .planet-label em{max-height:14px}
-.planet:focus-visible{outline:none}
-.planet.flip{flex-direction:row-reverse}
-.planet.ghost{pointer-events:none}
-.planet-layer.back .planet-label{opacity:.65}
-@media (max-width:820px){.planet-label{display:none}.planet-body{width:52px;height:52px}.hero-3d{opacity:.55}}
-
 /* --- HUD frames ------------------------------------------------ */
 .hud-frame{position:relative}
 .hud-c{position:absolute;width:18px;height:18px;border:2px solid var(--neon);pointer-events:none;filter:drop-shadow(0 0 6px var(--neon));z-index:3}
