@@ -2,7 +2,7 @@
    RoBlast stats page
    Reads data/stats.json (written by .github/workflows/stats.yml)
    and draws KPI tiles + Chart.js charts. "All games" adds each
-   game's numbers together; rates are weighted by players.
+   game's numbers together.
 ---------------------------------------------------------------- */
 (() => {
   const PALETTE = ['#3ef3ff', '#b975ff', '#ff4fd8', '#5ef1a9', '#ffc857', '#6e89ff', '#ff7a59', '#9ef0ff'];
@@ -13,7 +13,6 @@
   const nf = new Intl.NumberFormat('en-GB');
   const compact = new Intl.NumberFormat('en-GB', { notation: 'compact', maximumFractionDigits: 1 });
   const fmt = (v, digits = 0) => (Number.isFinite(v) ? (Math.abs(v) >= 10000 ? compact.format(v) : nf.format(Number(v.toFixed(digits)))) : '—');
-  const pct = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}%` : '—');
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 
   const PLATFORM_LABELS = { Computer: 'PC', Phone: 'Phone', Tablet: 'Tablet', Console: 'Console', VR: 'VR' };
@@ -25,12 +24,6 @@
 
   /* ---- data helpers ------------------------------------------- */
   const toMap = (series = []) => new Map(series.map((p) => [p.d, p.v]));
-
-  // Retention may arrive as a fraction (0.18) or a percent (18): normalise to percent.
-  function asPercent(series = []) {
-    const max = Math.max(0, ...series.map((p) => p.v));
-    return max <= 1 ? series.map((p) => ({ d: p.d, v: p.v * 100 })) : series;
-  }
 
   function usableGames() {
     return (state.data?.games || []).filter((g) => !g.noAccess && g.daily && Object.keys(g.daily).length);
@@ -53,24 +46,6 @@
     return out;
   }
 
-  // Weighted daily average of `key` (e.g. retention) using `weightKey` (e.g. DAU).
-  function weightedSeries(games, key, weightKey, transform = (s) => s) {
-    const num = new Map();
-    const den = new Map();
-    games.forEach((g) => {
-      const weights = toMap(g.daily[weightKey]);
-      transform(g.daily[key] || []).forEach((p) => {
-        const w = weights.get(p.d) || (games.length === 1 ? 1 : 0);
-        if (!w) return;
-        num.set(p.d, (num.get(p.d) || 0) + p.v * w);
-        den.set(p.d, (den.get(p.d) || 0) + w);
-      });
-    });
-    const out = new Map();
-    num.forEach((v, d) => out.set(d, v / den.get(d)));
-    return out;
-  }
-
   function windowDates(dates, days, offset = 0) {
     const end = dates.length - offset * days;
     return dates.slice(Math.max(0, end - days), Math.max(0, end));
@@ -78,20 +53,18 @@
 
   const pick = (map, dates) => dates.map((d) => (map.has(d) ? map.get(d) : null));
   const valuesOf = (arr) => arr.filter((v) => Number.isFinite(v));
-  const avg = (arr) => { const v = valuesOf(arr); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : NaN; };
   const sum = (arr) => { const v = valuesOf(arr); return v.length ? v.reduce((a, b) => a + b, 0) : NaN; };
   const max = (arr) => { const v = valuesOf(arr); return v.length ? Math.max(...v) : NaN; };
 
-  function weightedAvg(valueMap, weightMap, dates) {
-    let n = 0; let d = 0;
-    dates.forEach((date) => {
-      const v = valueMap.get(date); const w = weightMap.get(date) || 0;
-      if (Number.isFinite(v) && w) { n += v * w; d += w; }
-    });
-    return d ? n / d : NaN;
+  /* ---- KPI tiles ---------------------------------------------
+     Showcase framing: totals, records and reach. Period-over-period
+     changes are only shown when they're gains.
+  ---------------------------------------------------------------- */
+  function cumulative(values) {
+    let total = 0;
+    return values.map((v) => (total += Number.isFinite(v) ? v : 0));
   }
 
-  /* ---- KPI tiles ---------------------------------------------- */
   function sparkline(values, color) {
     const v = values.map((x) => (Number.isFinite(x) ? x : null));
     const nums = valuesOf(v);
@@ -101,55 +74,49 @@
     return `<svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
   }
 
-  function delta(current, previous) {
-    if (!Number.isFinite(current) || !Number.isFinite(previous) || previous === 0) return '';
-    const change = ((current - previous) / Math.abs(previous)) * 100;
-    const cls = change >= 0 ? 'up' : 'down';
-    return `<span class="delta ${cls}">${change >= 0 ? '▲' : '▼'} ${Math.abs(change).toFixed(1)}%</span>`;
+  function gain(current, previous) {
+    if (!Number.isFinite(current) || !Number.isFinite(previous) || previous <= 0) return '';
+    const change = ((current - previous) / previous) * 100;
+    return change >= 1 ? `<span class="delta up">▲ ${change.toFixed(change >= 100 ? 0 : 1)}%</span>` : '';
   }
 
   function renderKpis(games, dates) {
     const cur = windowDates(dates, state.range);
     const prev = windowDates(dates, state.range, 1);
-    const dau = sumSeries(games, 'dau');
     const sessions = sumSeries(games, 'sessions');
     const hours = sumSeries(games, 'playtimeHours');
-    const sessionLen = weightedSeries(games, 'avgSessionMin', 'sessions');
-    const d1 = weightedSeries(games, 'd1', 'dau', asPercent);
+    const dau = sumSeries(games, 'dau');
     const peak = sumSeries(games, 'peakCcu');
-
-    const tiles = [
-      { label: 'Avg daily players', value: fmt(avg(pick(dau, cur))), d: delta(avg(pick(dau, cur)), avg(pick(dau, prev))), spark: pick(dau, cur) },
-      { label: 'Sessions', value: fmt(sum(pick(sessions, cur))), d: delta(sum(pick(sessions, cur)), sum(pick(sessions, prev))), spark: pick(sessions, cur) },
-      { label: 'Hours played', value: fmt(sum(pick(hours, cur))), d: delta(sum(pick(hours, cur)), sum(pick(hours, prev))), spark: pick(hours, cur) },
-      { label: 'Avg session', value: Number.isFinite(weightedAvg(sessionLen, sessions, cur)) ? `${weightedAvg(sessionLen, sessions, cur).toFixed(1)}m` : '—', d: delta(weightedAvg(sessionLen, sessions, cur), weightedAvg(sessionLen, sessions, prev)), spark: pick(sessionLen, cur) },
-      { label: 'Day 1 retention', value: pct(weightedAvg(d1, dau, cur)), d: delta(weightedAvg(d1, dau, cur), weightedAvg(d1, dau, prev)), spark: pick(d1, cur) },
-      { label: 'Peak concurrent', value: fmt(max(pick(peak, windowDates(dates, Math.min(state.range, 28))))), d: '', note: `${Math.min(state.range, 28)}D`, spark: pick(peak, windowDates(dates, Math.min(state.range, 28))) }
-    ];
-
+    const mau = games.reduce((total, g) => {
+      const latest = (g.daily.mau || []).slice(-1)[0];
+      return total + (latest ? latest.v : 0);
+    }, 0);
+    const countries = new Set();
+    games.forEach((g) => (g.countries || []).forEach((c) => countries.add(c.label)));
     const publicTotals = games.reduce((acc, g) => {
-      if (g.public) {
-        acc.visits += Number(g.public.visits) || 0;
-        acc.favorites += Number(g.public.favorites) || 0;
-        acc.playing += Number(g.public.playing) || 0;
-        acc.any = true;
-      }
+      acc.visits += Number(g.public?.visits) || 0;
+      acc.favorites += Number(g.public?.favorites) || 0;
       return acc;
-    }, { visits: 0, favorites: 0, playing: 0, any: false });
+    }, { visits: 0, favorites: 0 });
 
-    if (publicTotals.any) {
-      tiles.push(
-        { label: 'All-time visits', value: fmt(publicTotals.visits), d: '', note: 'ALL-TIME', spark: [] },
-        { label: 'Favourites', value: fmt(publicTotals.favorites), d: '', note: 'ALL-TIME', spark: [] }
-      );
-    }
+    const rangeLabel = `LAST ${state.range} DAYS`;
+    const tiles = [
+      { label: 'Monthly players', value: mau, note: 'LAST 30 DAYS' },
+      { label: 'Sessions played', value: sum(pick(sessions, cur)), d: gain(sum(pick(sessions, cur)), sum(pick(sessions, prev))), note: rangeLabel, spark: cumulative(pick(sessions, cur)) },
+      { label: 'Hours played', value: sum(pick(hours, cur)), d: gain(sum(pick(hours, cur)), sum(pick(hours, prev))), note: rangeLabel, spark: cumulative(pick(hours, cur)) },
+      { label: 'Record day', value: max(pick(dau, dates)), note: 'PLAYERS IN ONE DAY' },
+      { label: 'Record concurrent', value: max(pick(peak, dates)), note: 'PLAYERS AT ONCE' },
+      { label: 'Countries reached', value: countries.size, suffix: countries.size >= 100 ? '+' : '', note: 'LAST 30 DAYS' },
+      { label: 'All-time visits', value: publicTotals.visits, note: 'ALL-TIME' },
+      { label: 'Favourites', value: publicTotals.favorites, note: 'ALL-TIME' }
+    ].filter((t) => Number.isFinite(t.value) && t.value > 0);
 
     $('kpi-grid').innerHTML = tiles.map((t, i) => `
       <div class="kpi hud-frame">
         <span class="kpi-label">${t.label}</span>
-        <strong class="kpi-value">${t.value}</strong>
-        <div class="kpi-foot">${t.d || `<span class="delta flat">${t.note || `${state.range}D`}</span>`}</div>
-        ${sparkline(t.spark, PALETTE[i % PALETTE.length])}
+        <strong class="kpi-value">${fmt(t.value)}${t.suffix || ''}</strong>
+        <div class="kpi-foot">${t.d || `<span class="delta flat">${t.note}</span>`}</div>
+        ${t.spark ? sparkline(t.spark, PALETTE[i % PALETTE.length]) : ''}
       </div>`).join('');
   }
 
@@ -177,12 +144,13 @@
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
-      animation: { duration: 700, easing: 'easeOutQuart' },
+      animation: { duration: 900, easing: 'easeOutQuart' },
       plugins: {
         legend: { labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 8, padding: 14 } },
         tooltip: {
           backgroundColor: 'rgba(6,5,20,.94)', borderColor: 'rgba(62,243,255,.5)', borderWidth: 1,
-          titleColor: '#3ef3ff', padding: 10, cornerRadius: 2
+          titleColor: '#3ef3ff', padding: 10, cornerRadius: 2,
+          callbacks: { label: (c) => `${c.dataset.label}: ${nf.format(Math.round(c.parsed.y ?? c.parsed.x ?? c.parsed))}` }
         }
       },
       scales: {
@@ -193,87 +161,50 @@
     };
   }
 
+  function growthLine(id, label, values, labels, color) {
+    draw(id, {
+      type: 'line',
+      data: { labels, datasets: [{ label, data: values, borderColor: color, backgroundColor: gradient(color), fill: 'origin', tension: 0.3, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2.5 }] },
+      options: baseOptions({ plugins: { ...baseOptions().plugins, legend: { display: false } } })
+    });
+  }
+
   function renderCharts(games, dates) {
     const cur = windowDates(dates, state.range);
     const labels = cur.map(shortDate);
     const multi = games.length > 1;
 
-    // DAU: one stacked area per game, or a single glowing line.
-    draw('chart-dau', {
+    // Sessions played: running total, stacked by game so the top line is the studio total.
+    const sessionOptions = baseOptions();
+    sessionOptions.scales.y.stacked = multi;
+    sessionOptions.plugins.legend.display = multi;
+    draw('chart-sessions', {
       type: 'line',
       data: {
         labels,
         datasets: games.map((g, i) => {
           const color = PALETTE[usableGames().indexOf(g) % PALETTE.length];
           return {
-            label: g.name, data: pick(toMap(g.daily.dau), cur), borderColor: color,
+            label: g.name, data: cumulative(pick(toMap(g.daily.sessions), cur)), borderColor: color,
             backgroundColor: multi ? `${color}55` : gradient(color), fill: multi ? (i === 0 ? 'origin' : '-1') : 'origin',
-            tension: 0.35, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2, spanGaps: true
+            tension: 0.3, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2
           };
         })
       },
-      options: baseOptions({ scales: { ...baseOptions().scales, y: { ...baseOptions().scales.y, stacked: multi } }, plugins: { ...baseOptions().plugins, legend: { display: multi, ...baseOptions().plugins.legend } } })
+      options: sessionOptions
     });
-    $('dau-note').textContent = multi ? 'Stacked by game' : '';
+    $('sessions-note').textContent = `Running total · ${state.range}D`;
 
-    // Sessions (bars) + hours played (line, right axis).
-    const sessions = sumSeries(games, 'sessions');
-    const hours = sumSeries(games, 'playtimeHours');
-    const engagementOptions = baseOptions();
-    engagementOptions.scales.y2 = { position: 'right', beginAtZero: true, grid: { display: false }, ticks: { callback: (v) => `${compact.format(v)}h` } };
-    draw('chart-engagement', {
-      data: {
-        labels,
-        datasets: [
-          { type: 'bar', label: 'Sessions', data: pick(sessions, cur), backgroundColor: 'rgba(185,117,255,.55)', hoverBackgroundColor: '#b975ff', borderRadius: 2, yAxisID: 'y' },
-          { type: 'line', label: 'Hours played', data: pick(hours, cur), borderColor: '#3ef3ff', backgroundColor: '#3ef3ff', tension: 0.35, pointRadius: 0, borderWidth: 2, yAxisID: 'y2', spanGaps: true }
-        ]
-      },
-      options: engagementOptions
-    });
+    growthLine('chart-hours', 'Hours played', cumulative(pick(sumSeries(games, 'playtimeHours'), cur)), labels, '#3ef3ff');
 
-    // Retention (percent).
-    const dau = sumSeries(games, 'dau');
-    const d1 = weightedSeries(games, 'd1', 'dau', asPercent);
-    const d7 = weightedSeries(games, 'd7', 'dau', asPercent);
-    const retentionOptions = baseOptions();
-    retentionOptions.scales.y.ticks = { callback: (v) => `${v}%` };
-    retentionOptions.plugins.tooltip.callbacks = { label: (c) => `${c.dataset.label}: ${pct(c.parsed.y)}` };
-    draw('chart-retention', {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Day 1', data: pick(d1, cur), borderColor: '#5ef1a9', backgroundColor: gradient('#5ef1a9'), fill: 'origin', tension: 0.35, pointRadius: 0, borderWidth: 2, spanGaps: true },
-          { label: 'Day 7', data: pick(d7, cur), borderColor: '#ff4fd8', backgroundColor: '#ff4fd8', tension: 0.35, pointRadius: 0, borderWidth: 2, spanGaps: true }
-        ]
-      },
-      options: retentionOptions
-    });
-
-    // New vs returning (stacked bars, last 30 days of data).
-    const nr = { new: new Map(), returning: new Map() };
-    games.forEach((g) => {
-      Object.entries(g.newVsReturning || {}).forEach(([key, s]) => {
-        const bucket = String(key).toLowerCase() === 'true' ? nr.new : nr.returning;
-        s.forEach((p) => bucket.set(p.d, (bucket.get(p.d) || 0) + p.v));
-      });
-    });
-    const nrDates = [...new Set([...nr.new.keys(), ...nr.returning.keys()])].sort().slice(-Math.min(30, state.range));
-    const stackedOptions = baseOptions();
-    stackedOptions.scales.x.stacked = true;
-    stackedOptions.scales.y.stacked = true;
-    draw('chart-newret', {
-      type: 'bar',
-      data: {
-        labels: nrDates.map(shortDate),
-        datasets: [
-          { label: 'Returning', data: pick(nr.returning, nrDates), backgroundColor: 'rgba(110,137,255,.7)', borderRadius: 2 },
-          { label: 'New', data: pick(nr.new, nrDates), backgroundColor: 'rgba(62,243,255,.75)', borderRadius: 2 }
-        ]
-      },
-      options: stackedOptions
-    });
+    // New players gained (from the new vs returning breakdown, up to 30 days).
+    const fresh = new Map();
+    games.forEach((g) => Object.entries(g.newVsReturning || {}).forEach(([key, s]) => {
+      if (String(key).toLowerCase() !== 'true') return;
+      s.forEach((p) => fresh.set(p.d, (fresh.get(p.d) || 0) + p.v));
+    }));
+    const freshDates = [...fresh.keys()].sort().slice(-Math.min(30, state.range));
+    growthLine('chart-newplayers', 'New players', cumulative(pick(fresh, freshDates)), freshDates.map(shortDate), '#5ef1a9');
 
     // Platforms (doughnut).
     const platforms = new Map();
@@ -301,6 +232,7 @@
     const countryRows = [...countries].sort((a, b) => b[1] - a[1]).slice(0, 8);
     const countryOptions = baseOptions({ indexAxis: 'y' });
     countryOptions.plugins.legend = { display: false };
+    countryOptions.plugins.tooltip.callbacks = { label: (c) => `${nf.format(Math.round(c.parsed.x))} player-days` };
     countryOptions.scales = {
       x: { grid: { color: 'rgba(62,243,255,.08)' }, beginAtZero: true, ticks: { callback: (v) => compact.format(v) } },
       y: { grid: { display: false } }
@@ -309,7 +241,7 @@
       type: 'bar',
       data: {
         labels: countryRows.map(([k]) => countryName(k)),
-        datasets: [{ label: 'Player-days', data: countryRows.map(([, v]) => v), backgroundColor: countryRows.map((_, i) => `${PALETTE[i % PALETTE.length]}bb`), borderRadius: 2 }]
+        datasets: [{ label: 'Players', data: countryRows.map(([, v]) => v), backgroundColor: countryRows.map((_, i) => `${PALETTE[i % PALETTE.length]}bb`), borderRadius: 2 }]
       },
       options: countryOptions
     });
@@ -318,27 +250,23 @@
   /* ---- Leaderboard ------------------------------------------- */
   function renderLeaderboard(dates) {
     const cur = windowDates(dates, state.range);
-    const rows = usableGames().map((g) => {
-      const dau = toMap(g.daily.dau);
-      return {
-        g,
-        dau: avg(pick(dau, cur)),
-        playtime: avg(pick(toMap(g.daily.avgPlaytimeMin), cur)),
-        d1: weightedAvg(toMap(asPercent(g.daily.d1)), dau, cur),
-        visits: g.public ? Number(g.public.visits) : NaN
-      };
-    }).sort((a, b) => (b.dau || 0) - (a.dau || 0));
-    const top = Math.max(...rows.map((r) => r.dau || 0), 1);
-    $('board-note').textContent = `Avg over ${state.range}D`;
+    const rows = usableGames().map((g) => ({
+      g,
+      sessions: sum(pick(toMap(g.daily.sessions), cur)),
+      hours: sum(pick(toMap(g.daily.playtimeHours), cur)),
+      visits: g.public ? Number(g.public.visits) : NaN
+    })).sort((a, b) => (b.sessions || 0) - (a.sessions || 0));
+    const top = Math.max(...rows.map((r) => r.sessions || 0), 1);
+    $('board-note').textContent = `Last ${state.range} days`;
     $('leaderboard').innerHTML = `
-      <div class="lb-row lb-head"><span>#</span><span>Game</span><span>Players/day</span><span>Playtime</span><span>D1</span></div>
+      <div class="lb-row lb-head"><span>#</span><span>Game</span><span>Sessions</span><span>Hours</span><span>All-time visits</span></div>
       ${rows.map((r, i) => `
         <button class="lb-row${state.game === r.g.universeId ? ' active' : ''}" data-game="${esc(r.g.universeId)}">
           <span class="lb-rank">${String(i + 1).padStart(2, '0')}</span>
-          <span class="lb-name">${esc(r.g.icon)} ${esc(r.g.name)}<i style="width:${((r.dau || 0) / top) * 100}%;background:${PALETTE[usableGames().indexOf(r.g) % PALETTE.length]}"></i></span>
-          <span>${fmt(r.dau)}</span>
-          <span>${Number.isFinite(r.playtime) ? `${r.playtime.toFixed(1)}m` : '—'}</span>
-          <span>${pct(r.d1)}</span>
+          <span class="lb-name">${esc(r.g.icon)} ${esc(r.g.name)}<i style="width:${((r.sessions || 0) / top) * 100}%;background:${PALETTE[usableGames().indexOf(r.g) % PALETTE.length]}"></i></span>
+          <span>${fmt(r.sessions)}</span>
+          <span>${fmt(r.hours)}</span>
+          <span>${fmt(r.visits)}</span>
         </button>`).join('')}`;
   }
 

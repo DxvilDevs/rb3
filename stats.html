@@ -26,7 +26,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="icon" href="roblast-favicon.png" type="image/png" />
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="stats.css?v=20261011-0500" />
+  <link rel="stylesheet" href="stats.css?v=20261011-0600" />
 </head>
 <body>
   <canvas id="fx-canvas" aria-hidden="true"></canvas>
@@ -54,7 +54,7 @@
         <div>
           <div class="section-label" data-scramble>STUDIO TELEMETRY</div>
           <h1 class="glitch" data-text="RoBlast stats">RoBlast stats</h1>
-          <p>Analytics across every RoBlast game, synced from Roblox every 6 hours.</p>
+          <p>Live numbers from every RoBlast game, synced straight from Roblox.</p>
         </div>
         <div class="sync-chip" id="sync-chip"><span class="hud-dot"></span><span id="sync-text">Connecting…</span></div>
       </div>
@@ -80,23 +80,18 @@
         <div class="chart-grid">
           <section class="chart-panel wide hud-frame">
             <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
-            <header><h2>Daily active users</h2><span class="panel-note" id="dau-note"></span></header>
-            <div class="chart-box tall"><canvas id="chart-dau"></canvas></div>
+            <header><h2>Sessions played</h2><span class="panel-note" id="sessions-note"></span></header>
+            <div class="chart-box tall"><canvas id="chart-sessions"></canvas></div>
           </section>
           <section class="chart-panel hud-frame">
             <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
-            <header><h2>Sessions &amp; playtime</h2></header>
-            <div class="chart-box"><canvas id="chart-engagement"></canvas></div>
+            <header><h2>Hours played</h2><span class="panel-note">Running total</span></header>
+            <div class="chart-box"><canvas id="chart-hours"></canvas></div>
           </section>
           <section class="chart-panel hud-frame">
             <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
-            <header><h2>Retention</h2><span class="panel-note">Day 1 &amp; day 7</span></header>
-            <div class="chart-box"><canvas id="chart-retention"></canvas></div>
-          </section>
-          <section class="chart-panel hud-frame">
-            <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
-            <header><h2>New vs returning</h2><span class="panel-note">Last 30 days</span></header>
-            <div class="chart-box"><canvas id="chart-newret"></canvas></div>
+            <header><h2>New players gained</h2><span class="panel-note">Running total</span></header>
+            <div class="chart-box"><canvas id="chart-newplayers"></canvas></div>
           </section>
           <section class="chart-panel hud-frame">
             <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
@@ -108,22 +103,22 @@
             <header><h2>Top countries</h2><span class="panel-note">Last 30 days</span></header>
             <div class="chart-box"><canvas id="chart-countries"></canvas></div>
           </section>
-          <section class="chart-panel hud-frame">
+          <section class="chart-panel wide hud-frame">
             <i class="hud-c tl"></i><i class="hud-c tr"></i><i class="hud-c bl"></i><i class="hud-c br"></i>
             <header><h2>Game leaderboard</h2><span class="panel-note" id="board-note"></span></header>
             <div class="leaderboard" id="leaderboard"></div>
           </section>
         </div>
 
-        <p class="stats-footnote">Data comes from Roblox Creator Analytics via Open Cloud. Combined figures add each game together, so a player active in two games counts twice. Peak concurrent players covers the last 28 days.</p>
+        <p class="stats-footnote">Data comes from Roblox Creator Analytics via Open Cloud. Combined figures add each game together. Record concurrent players covers the last 28 days.</p>
       </div>
     </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
-  <script src="games-data.js?v=20261011-0500"></script>
-  <script src="script.js?v=20261011-0500"></script>
-  <script src="fx.js?v=20261011-0500"></script>
-  <script src="stats.js?v=20261011-0500"></script>
+  <script src="games-data.js?v=20261011-0600"></script>
+  <script src="script.js?v=20261011-0600"></script>
+  <script src="fx.js?v=20261011-0600"></script>
+  <script src="stats.js?v=20261011-0600"></script>
 </body>
 </html>

@@ -7,8 +7,9 @@
   Open Cloud Analytics Query API with ROBLOX_API_KEY and writes data/stats.json
   for stats.html to chart.
 
-  The site is public, so only player-facing metrics are fetched here. Revenue
-  is deliberately left out.
+  The page is a public showcase, so only growth/reach metrics are fetched
+  (players, sessions, hours played, records, reach). Revenue, retention and
+  session-length figures are deliberately left out of the public data file.
 
   Env:
     ROBLOX_API_KEY   Open Cloud key with universe.analytics:read (required)
@@ -197,10 +198,7 @@ async function collectGame(game, universeId, publicInfo) {
     ['DailyActiveUsers', daily('DailyActiveUsers'), (r) => { result.daily.dau = series(r); }],
     ['Visits', daily('Visits'), (r) => { result.daily.sessions = series(r); }],
     ['TotalPlayTimeHours', daily('TotalPlayTimeHours'), (r) => { result.daily.playtimeHours = series(r); }],
-    ['AveragePlayTimeMinutesPerDAU', daily('AveragePlayTimeMinutesPerDAU'), (r) => { result.daily.avgPlaytimeMin = series(r); }],
-    ['AverageSessionLengthMinutes', daily('AverageSessionLengthMinutes'), (r) => { result.daily.avgSessionMin = series(r); }],
-    ['ForwardD1Retention', daily('ForwardD1Retention'), (r) => { result.daily.d1 = series(r); }],
-    ['ForwardD7Retention', daily('ForwardD7Retention'), (r) => { result.daily.d7 = series(r); }],
+    ['MonthlyActiveUsers', daily('MonthlyActiveUsers', 7), (r) => { result.daily.mau = series(r); }],
     ['PeakConcurrentPlayers', daily('PeakConcurrentPlayers', PERFORMANCE_DAYS), (r) => { result.daily.peakCcu = series(r); }],
     ['DailyActiveUsers by IsNewUser',
       { ...daily('DailyActiveUsers', BREAKDOWN_DAYS), breakdown: ['IsNewUser'] },
@@ -209,7 +207,7 @@ async function collectGame(game, universeId, publicInfo) {
       { ...daily('DailyActiveUsers', BREAKDOWN_DAYS), granularity: 'None', breakdown: ['Platform'] },
       (r) => { result.platforms = breakdownTotals(r); }],
     ['DailyActiveUsers by Country',
-      { ...daily('DailyActiveUsers', BREAKDOWN_DAYS), granularity: 'None', breakdown: ['Country'], limit: 8 },
+      { ...daily('DailyActiveUsers', BREAKDOWN_DAYS), granularity: 'None', breakdown: ['Country'], limit: 100 },
       (r) => { result.countries = breakdownTotals(r); }]
   ];
 
