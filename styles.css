@@ -291,6 +291,7 @@ main>section>.container{position:relative;z-index:2}
 .game-art img[src=""]{opacity:0}
 .game-art{background:linear-gradient(135deg,#1b1046,#0e2a46)}
 .game-badge{z-index:2;display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);color:var(--live);border-color:rgba(94,241,169,.4);background:rgba(4,20,14,.7)}
+.game-players{color:#eafff4;font-weight:800;letter-spacing:.08em}
 .game-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--live);box-shadow:0 0 8px var(--live);animation:blink 1.4s steps(2) infinite}
 .game-play{z-index:2;font-family:var(--font-mono);letter-spacing:.12em;border-radius:0;border-color:rgba(62,243,255,.5);color:var(--neon);clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);transition:background .25s,color .25s,box-shadow .25s}
 .game-card:hover .game-play{background:var(--neon);color:#05040f;box-shadow:0 0 22px var(--neon)}

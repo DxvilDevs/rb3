@@ -40,7 +40,7 @@ function gameCardTemplate(game) {
     <article class="game-card reveal" data-roblox-place-id="${game.placeId}">
       <a class="game-art" href="${game.url}" target="_blank" rel="noreferrer">
         <img src="${game.thumbnail}" alt="${game.name}" loading="lazy" />
-        <span class="game-badge">LIVE</span>
+        <span class="game-badge">LIVE<span class="game-players" hidden></span></span>
         <span class="game-play">PLAY ↗</span>
       </a>
       <div class="game-info">
@@ -283,8 +283,30 @@ function formatUpdatedTime(date) {
   }).format(date);
 }
 
+// Write each game's current player count onto its card badge.
+function updateGameCardPlayers(results) {
+  for (const result of results) {
+    const playing = result.status === 'ok' ? result.playing : null;
+    const placeId = String(result.game.placeId);
+    document.querySelectorAll('.game-card[data-roblox-place-id]').forEach((card) => {
+      if (card.dataset.robloxPlaceId !== placeId) return;
+      const label = card.querySelector('.game-players');
+      if (!label) return;
+      if (!Number.isFinite(playing)) {
+        label.hidden = true;
+        return;
+      }
+      label.textContent = `· ${new Intl.NumberFormat('en-GB').format(playing)} playing`;
+      label.hidden = false;
+    });
+  }
+}
+
+const hasGameCards = Boolean(document.querySelector('.game-card[data-roblox-place-id]'));
+
 async function updateLiveStats() {
-  if (!statsElements.games || !Array.isArray(ROBLAST_GAMES) || !ROBLAST_GAMES.length) return;
+  if (!Array.isArray(ROBLAST_GAMES) || !ROBLAST_GAMES.length) return;
+  if (!statsElements.games && !hasGameCards) return;
   if (statsRequestRunning) return;
 
   statsRequestRunning = true;
@@ -297,7 +319,7 @@ async function updateLiveStats() {
 
   // Total Games is intentionally driven by the catalogue/config, so adding
   // another game immediately increases the displayed studio total.
-  statsElements.games.textContent = formatNumber(games.length);
+  if (statsElements.games) statsElements.games.textContent = formatNumber(games.length);
 
   if (statsElements.status) {
     statsElements.status.textContent = 'Updating live Roblox stats…';
@@ -309,6 +331,9 @@ async function updateLiveStats() {
     const settled = await Promise.all(
       games.map((game) => fetchGameStats(game, cache))
     );
+
+    updateGameCardPlayers(settled);
+    if (!statsElements.games) return;
 
     const usable = settled.filter((result) => result.status === 'ok');
     const expectedGames = games.length;
@@ -369,7 +394,7 @@ async function updateLiveStats() {
 }
 
 updateLiveStats();
-if (statsElements.games) {
+if (statsElements.games || hasGameCards) {
   window.setInterval(updateLiveStats, statsRefreshMs);
 }
 
