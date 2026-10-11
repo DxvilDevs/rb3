@@ -320,7 +320,7 @@ main>section>.container{position:relative;z-index:2}
 
 /* Team ID cards */
 .team-section{padding:20px 0 90px}
-.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:22px}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,280px));justify-content:center;gap:22px}
 .team-card{position:relative;display:grid;justify-items:center;align-content:start;gap:4px;padding:26px 20px 22px;text-align:center;border:1px solid rgba(62,243,255,.2);background:linear-gradient(180deg,rgba(18,16,46,.85),rgba(10,9,28,.92));overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s}
 .team-card::after{content:"";position:absolute;left:0;right:0;top:-40%;height:40%;background:linear-gradient(180deg,transparent,rgba(62,243,255,.12),transparent);transition:top .9s ease;pointer-events:none}
 .team-card:hover{transform:translateY(-4px);border-color:rgba(62,243,255,.6);box-shadow:0 0 36px rgba(62,243,255,.16)}

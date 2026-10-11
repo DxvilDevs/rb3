@@ -18,12 +18,14 @@
     avatar:        optional image path/URL; overrides the Roblox avatar
 */
 const ROBLAST_MILESTONES = [
-  // { date: 'Jan 2024', title: 'RoBlast founded', description: 'Two devs, one idea.' },
-  // { date: 'Aug 2024', title: 'Mansion Tycoon launches', description: 'Our first release on Roblox.' },
-  // { date: 'Oct 2026', title: '1M total visits', description: 'Thank you, players!' },
+  { date: '2021', title: 'RoBlast founded' },
+  { date: 'July 2022', title: 'Clean Up Bedwars! launches' },
+  { date: 'Aug 2024', title: 'Mansion Tycoon launches' },
+  { date: 'June 2026', title: 'Kart for Brainrots launches' },
+  { date: 'Oct 2026', title: 'Spin a Soccer Player launches' },
 ];
 
 const ROBLAST_TEAM = [
-  // { name: 'Dxvil', role: 'Founder & Lead Developer', robloxUserId: 123456789 },
-  // { name: 'Someone', role: 'Builder', avatar: 'team/someone.png' },
+  { name: 'Dxvil', role: 'Founder & CEO', avatar: 'team/dxvil.webp' },
+  { name: 'Ethan', role: 'Co-Founder', avatar: 'team/ethan.webp' },
 ];
