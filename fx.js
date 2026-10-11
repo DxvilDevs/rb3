@@ -49,7 +49,60 @@
     }));
   }
 
+  /* Hyperdrive warp field (easter egg, see bottom of file) */
+  const warp = { active: false, start: 0, duration: 7000, stars: [] };
+
+  function spawnStar(star, near) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = near ? Math.random() * 80 : Math.random() * Math.max(width, height) * 0.6;
+    star.x = width / 2 + Math.cos(angle) * radius;
+    star.y = height / 2 + Math.sin(angle) * radius;
+    star.hue = [186, 275, 318][Math.floor(Math.random() * 3)];
+    star.w = Math.random() * 1.8 + 0.6;
+    return star;
+  }
+
+  function drawWarp() {
+    const t = (performance.now() - warp.start) / warp.duration;
+    if (t >= 1) {
+      warp.active = false;
+      document.body.classList.remove('hyperdrive');
+      return;
+    }
+    // Ramp up, cruise, then ease back down to the normal field.
+    const intensity = t < 0.15 ? t / 0.15 : t > 0.8 ? (1 - t) / 0.2 : 1;
+    const cx = width / 2;
+    const cy = height / 2;
+
+    ctx.clearRect(0, 0, width, height);
+    for (const star of warp.stars) {
+      const dx = star.x - cx;
+      const dy = star.y - cy;
+      const dist = Math.hypot(dx, dy) || 1;
+      const speed = (1.5 + dist * 0.07) * intensity;
+      const nx = dx / dist;
+      const ny = dy / dist;
+      star.x += nx * speed;
+      star.y += ny * speed;
+      if (star.x < -50 || star.x > width + 50 || star.y < -50 || star.y > height + 50) {
+        spawnStar(star, true);
+        continue;
+      }
+      const tail = speed * 5;
+      ctx.strokeStyle = `hsla(${star.hue}, 100%, 72%, ${0.35 + intensity * 0.6})`;
+      ctx.lineWidth = star.w;
+      ctx.beginPath();
+      ctx.moveTo(star.x - nx * tail, star.y - ny * tail);
+      ctx.lineTo(star.x, star.y);
+      ctx.stroke();
+    }
+  }
+
   function drawParticles() {
+    if (warp.active) {
+      drawWarp();
+      return;
+    }
     ctx.clearRect(0, 0, width, height);
     const linkDist = 130;
 
@@ -236,6 +289,77 @@
       });
     }).observe(el, { childList: true, characterData: true, subtree: true });
   });
+
+  /* Easter egg: HYPERDRIVE --------------------------------------
+     Desktop: Konami code (up up down down left right left right B A).
+     Touch:   tap the big glitch title 5 times quickly.
+  ---------------------------------------------------------------- */
+  let toastTimer = 0;
+
+  function showHyperToast() {
+    let toast = document.querySelector('.hyper-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'hyper-toast';
+      toast.setAttribute('role', 'status');
+      toast.innerHTML = '<span class="hyper-toast-tag">CHEAT CODE ACCEPTED</span><strong></strong>';
+      document.body.appendChild(toast);
+    }
+    const line = toast.querySelector('strong');
+    line.textContent = '';
+    toast.classList.remove('show');
+    void toast.offsetWidth;
+    toast.classList.add('show');
+    scramble(line, 'HYPERDRIVE ENGAGED', 700);
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => toast.classList.remove('show'), 6200);
+  }
+
+  function engageHyperdrive() {
+    if (warp.active) return;
+    showHyperToast();
+    if (reduceMotion || !ctx) return;
+
+    const flash = document.createElement('div');
+    flash.className = 'hyper-flash';
+    document.body.appendChild(flash);
+    flash.addEventListener('animationend', () => flash.remove());
+
+    warp.stars = Array.from({ length: Math.min(320, Math.round((width * height) / 4500)) }, () => spawnStar({}, false));
+    warp.start = performance.now();
+    warp.active = true;
+    document.body.classList.add('hyperdrive');
+  }
+
+  const konami = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a'];
+  let konamiIndex = 0;
+  document.addEventListener('keydown', (event) => {
+    const key = String(event.key || '').toLowerCase();
+    if (key === konami[konamiIndex]) {
+      konamiIndex += 1;
+      if (konamiIndex === konami.length) {
+        konamiIndex = 0;
+        engageHyperdrive();
+      }
+    } else {
+      konamiIndex = key === konami[0] ? 1 : 0;
+    }
+  });
+
+  let taps = [];
+  document.querySelectorAll('.glitch').forEach((title) => {
+    title.addEventListener('click', () => {
+      const now = Date.now();
+      taps = taps.filter((time) => now - time < 3000);
+      taps.push(now);
+      if (taps.length >= 5) {
+        taps = [];
+        engageHyperdrive();
+      }
+    });
+  });
+
+  console.log('%c[ROBLAST.SYS] %cpsst… try ↑ ↑ ↓ ↓ ← → ← → B A', 'color:#3ef3ff;font-weight:bold', 'color:#b975ff');
 
   /* HUD clock -------------------------------------------------- */
   const clock = document.getElementById('hud-clock');

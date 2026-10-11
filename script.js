@@ -60,6 +60,16 @@ function renderGames() {
   const cards = ROBLAST_GAMES.map(gameCardTemplate).join('');
   if (homeGrid) homeGrid.innerHTML = cards;
   if (catalogueGrid) catalogueGrid.innerHTML = cards;
+
+  // "Five games. One studio." stays in sync with games-data.js.
+  const subtitle = document.getElementById('games-subtitle');
+  if (subtitle) {
+    const count = new Set(ROBLAST_GAMES.map((game) => String(game.placeId))).size;
+    const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+      'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen', 'Twenty'];
+    const label = words[count] || String(count);
+    subtitle.textContent = `${label} game${count === 1 ? '' : 's'}. One studio. A lot of fun.`;
+  }
 }
 
 renderGames();
