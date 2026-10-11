@@ -147,6 +147,9 @@ function series(response) {
     .filter((point) => point.v !== null);
 }
 
+// Roblox uses placeholder values such as RAQI_RESERVED_DIMENSION_VALUES_UNKNOWN.
+const isPlaceholder = (label) => /^RAQI_|^unknown$/i.test(String(label));
+
 function breakdownTotals(response) {
   return (response?.values || [])
     .map((entry) => {
@@ -154,7 +157,7 @@ function breakdownTotals(response) {
       const value = round(entry.dataPoints?.reduce((sum, p) => sum + (Number(p.value) || 0), 0), 2);
       return { label: key?.displayValue || key?.value || 'Unknown', value };
     })
-    .filter((entry) => entry.value !== null)
+    .filter((entry) => entry.value !== null && !isPlaceholder(entry.label))
     .sort((a, b) => b.value - a.value);
 }
 
@@ -162,7 +165,8 @@ function breakdownSeries(response) {
   const out = {};
   for (const entry of response?.values || []) {
     const key = entry.breakdowns?.[0];
-    out[String(key?.value ?? 'Unknown')] = (entry.dataPoints || [])
+    if (isPlaceholder(key?.value ?? 'Unknown')) continue;
+    out[String(key.value)] = (entry.dataPoints || [])
       .map((point) => ({ d: ymd(point.time), v: round(point.value, 4) }))
       .filter((point) => point.v !== null);
   }
@@ -178,7 +182,7 @@ async function collectGame(game, universeId, publicInfo) {
   const result = {
     placeId: String(game.placeId),
     universeId,
-    name: publicInfo?.name || game.name,
+    name: game.name || publicInfo?.name,
     icon: game.icon || '',
     url: game.url,
     created: publicInfo?.created || null,

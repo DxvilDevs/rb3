@@ -25,12 +25,31 @@
   /* ---- data helpers ------------------------------------------- */
   const toMap = (series = []) => new Map(series.map((p) => [p.d, p.v]));
 
+  const isPlaceholder = (label) => /^RAQI_|^unknown$/i.test(String(label));
+
+  // Display names come from games-data.js when available (Roblox titles can carry tags like "[NEW]").
+  const localNames = new Map(
+    (typeof ROBLAST_GAMES !== 'undefined' && Array.isArray(ROBLAST_GAMES) ? ROBLAST_GAMES : [])
+      .map((game) => [String(game.placeId), game.name])
+  );
+
   function usableGames() {
     return (state.data?.games || []).filter((g) => !g.noAccess && g.daily && Object.keys(g.daily).length);
   }
 
-  function selectedGames() {
-    const games = usableGames();
+  // Showcase thresholds: quiet games and small records stay off the page.
+  const MIN_SESSIONS = 100;
+  const MIN_RECORD_CONCURRENT = 100;
+
+  // Games with real activity inside the selected window.
+  function activeGames(dates) {
+    const cur = new Set(windowDates(dates, state.range));
+    return usableGames().filter((g) => (g.daily.sessions || [])
+      .reduce((total, p) => total + (cur.has(p.d) ? p.v : 0), 0) >= MIN_SESSIONS);
+  }
+
+  function selectedGames(dates) {
+    const games = activeGames(dates);
     return state.game === 'all' ? games : games.filter((g) => g.universeId === state.game);
   }
 
@@ -92,8 +111,10 @@
       return total + (latest ? latest.v : 0);
     }, 0);
     const countries = new Set();
-    games.forEach((g) => (g.countries || []).forEach((c) => countries.add(c.label)));
-    const publicTotals = games.reduce((acc, g) => {
+    games.forEach((g) => (g.countries || []).filter((c) => !isPlaceholder(c.label)).forEach((c) => countries.add(c.label)));
+    // All-time public totals count every game (even ones without analytics access).
+    const publicGames = state.game === 'all' ? (state.data.games || []) : games;
+    const publicTotals = publicGames.reduce((acc, g) => {
       acc.visits += Number(g.public?.visits) || 0;
       acc.favorites += Number(g.public?.favorites) || 0;
       return acc;
@@ -105,12 +126,14 @@
       { label: 'Sessions played', value: sum(pick(sessions, cur)), d: gain(sum(pick(sessions, cur)), sum(pick(sessions, prev))), note: rangeLabel, spark: cumulative(pick(sessions, cur)) },
       { label: 'Hours played', value: sum(pick(hours, cur)), d: gain(sum(pick(hours, cur)), sum(pick(hours, prev))), note: rangeLabel, spark: cumulative(pick(hours, cur)) },
       { label: 'Record day', value: max(pick(dau, dates)), note: 'PLAYERS IN ONE DAY' },
-      { label: 'Record concurrent', value: max(pick(peak, dates)), note: 'PLAYERS AT ONCE' },
+      { label: 'Record concurrent', value: max(pick(peak, dates)), min: MIN_RECORD_CONCURRENT, note: 'PLAYERS AT ONCE' },
       { label: 'Countries reached', value: countries.size, suffix: countries.size >= 100 ? '+' : '', note: 'LAST 30 DAYS' },
       { label: 'All-time visits', value: publicTotals.visits, note: 'ALL-TIME' },
       { label: 'Favourites', value: publicTotals.favorites, note: 'ALL-TIME' }
-    ].filter((t) => Number.isFinite(t.value) && t.value > 0);
+    ].filter((t) => Number.isFinite(t.value) && t.value > 0 && t.value >= (t.min || 0));
 
+    // Pick a column count that fills rows evenly on desktop (e.g. 6 tiles -> 3 x 2).
+    $('kpi-grid').style.setProperty('--cols', { 1: 1, 2: 2, 3: 3, 5: 3, 6: 3, 9: 3 }[tiles.length] || 4);
     $('kpi-grid').innerHTML = tiles.map((t, i) => `
       <div class="kpi hud-frame">
         <span class="kpi-label">${t.label}</span>
@@ -200,7 +223,7 @@
     // New players gained (from the new vs returning breakdown, up to 30 days).
     const fresh = new Map();
     games.forEach((g) => Object.entries(g.newVsReturning || {}).forEach(([key, s]) => {
-      if (String(key).toLowerCase() !== 'true') return;
+      if (!['true', 'new'].includes(String(key).toLowerCase())) return;
       s.forEach((p) => fresh.set(p.d, (fresh.get(p.d) || 0) + p.v));
     }));
     const freshDates = [...fresh.keys()].sort().slice(-Math.min(30, state.range));
@@ -208,7 +231,7 @@
 
     // Platforms (doughnut).
     const platforms = new Map();
-    games.forEach((g) => (g.platforms || []).forEach((p) => platforms.set(p.label, (platforms.get(p.label) || 0) + p.value)));
+    games.forEach((g) => (g.platforms || []).filter((p) => !isPlaceholder(p.label)).forEach((p) => platforms.set(p.label, (platforms.get(p.label) || 0) + p.value)));
     const platformRows = [...platforms].sort((a, b) => b[1] - a[1]);
     const platformTotal = platformRows.reduce((s, [, v]) => s + v, 0) || 1;
     draw('chart-platforms', {
@@ -228,7 +251,7 @@
 
     // Top countries (horizontal bars).
     const countries = new Map();
-    games.forEach((g) => (g.countries || []).forEach((p) => countries.set(p.label, (countries.get(p.label) || 0) + p.value)));
+    games.forEach((g) => (g.countries || []).filter((p) => !isPlaceholder(p.label)).forEach((p) => countries.set(p.label, (countries.get(p.label) || 0) + p.value)));
     const countryRows = [...countries].sort((a, b) => b[1] - a[1]).slice(0, 8);
     const countryOptions = baseOptions({ indexAxis: 'y' });
     countryOptions.plugins.legend = { display: false };
@@ -250,7 +273,7 @@
   /* ---- Leaderboard ------------------------------------------- */
   function renderLeaderboard(dates) {
     const cur = windowDates(dates, state.range);
-    const rows = usableGames().map((g) => ({
+    const rows = activeGames(dates).map((g) => ({
       g,
       sessions: sum(pick(toMap(g.daily.sessions), cur)),
       hours: sum(pick(toMap(g.daily.playtimeHours), cur)),
@@ -271,22 +294,21 @@
   }
 
   /* ---- Controls ----------------------------------------------- */
-  function renderPills() {
-    const games = state.data.games || [];
+  function renderPills(dates) {
+    const games = activeGames(dates);
     $('game-pills').innerHTML = [
       `<button class="pill${state.game === 'all' ? ' active' : ''}" data-game="all">All games</button>`,
-      ...games.map((g) => {
-        const off = g.noAccess || !Object.keys(g.daily || {}).length;
-        return `<button class="pill${state.game === g.universeId ? ' active' : ''}" data-game="${esc(g.universeId)}"${off ? ' disabled title="No analytics access for this game yet"' : ''}>${esc(g.icon)} ${esc(g.name)}</button>`;
-      })
+      ...games.map((g) => `<button class="pill${state.game === g.universeId ? ' active' : ''}" data-game="${esc(g.universeId)}">${esc(g.icon)} ${esc(g.name)}</button>`)
     ].join('');
     document.querySelectorAll('#range-pills .pill').forEach((b) => b.classList.toggle('active', Number(b.dataset.range) === state.range));
   }
 
   function render() {
-    const games = selectedGames();
     const dates = allDates();
-    renderPills();
+    // A game that has no activity in the new range drops back to "All games".
+    if (state.game !== 'all' && !activeGames(dates).some((g) => g.universeId === state.game)) state.game = 'all';
+    const games = selectedGames(dates);
+    renderPills(dates);
     renderKpis(games, dates);
     if (window.Chart) renderCharts(games, dates);
     renderLeaderboard(dates);
@@ -325,6 +347,7 @@
       const response = await fetch('data/stats.json', { cache: 'no-cache' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       state.data = await response.json();
+      (state.data.games || []).forEach((g) => { g.name = localNames.get(String(g.placeId)) || g.name; });
       if (!usableGames().length) throw new Error('No usable games');
     } catch (error) {
       console.info('RoBlast stats unavailable:', error.message);
